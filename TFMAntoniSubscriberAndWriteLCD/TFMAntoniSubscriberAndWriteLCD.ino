@@ -104,8 +104,9 @@ int messageSize = mqttClient.parseMessage();
         fila = fila +1;
       }
       if(fila == 4){
-        fila = 0;
+        delay(500);
         lcd.clear();
+        fila = 0;
       }
       lcd.setCursor(columna, fila);
       char caracter = (char)mqttClient.read();
