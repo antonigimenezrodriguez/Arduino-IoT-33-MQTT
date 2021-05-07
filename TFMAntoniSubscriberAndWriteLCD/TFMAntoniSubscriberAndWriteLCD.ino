@@ -1,15 +1,6 @@
-#include "arduino_secrets.h"
-/*
-  ArduinoMqttClient - WiFi Simple Receive
 
-  This example connects to a MQTT broker and subscribes to a single topic.
-  When a message is received it prints the message to the serial monitor.
-
-  The circuit:
-  - Arduino MKR 1000, MKR 1010 or Uno WiFi Rev.2 board
-
-  This example code is in the public domain.
-*/
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
 
 #include <ArduinoMqttClient.h>
 #if defined(ARDUINO_SAMD_MKRWIFI1010) || defined(ARDUINO_SAMD_NANO_33_IOT) || defined(ARDUINO_AVR_UNO_WIFI_REV2)
@@ -20,16 +11,12 @@
   #include <ESP8266WiFi.h>
 #endif
 
-///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-char ssid[] = SECRET_SSID;        // your network SSID (name)
-char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 
-// To connect with SSL/TLS:
-// 1) Change WiFiClient to WiFiSSLClient.
-// 2) Change port value from 1883 to 8883.
-// 3) Change broker value to a server with a known SSL/TLS root certificate 
-//    flashed in the WiFi module.
+char ssid[] = "TP-Link_0846";        // your network SSID (name)
+char pass[] = "24398006";    // your network password (use for WPA, or use as key for WEP)
 
+/* Initialise the LiquidCrystal library. The default address is 0x27 and this is a 16x2 line display */
+LiquidCrystal_I2C lcd(0x27,20,4);
 WiFiClient wifiClient;
 MqttClient mqttClient(wifiClient);
 
@@ -37,10 +24,13 @@ const char broker[] = "test.mosquitto.org";
 int        port     = 1883;
 const char topic[]  = "blogTFMAntoni";
 
-void setup() {
-  //Initialize serial and wait for port to open:
-  Serial.begin(9600);
-  while (!Serial) {
+void setup() 
+{
+  /* Initialise the LCD */
+  lcd.init();
+  lcd.init();
+
+while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
 
@@ -80,33 +70,50 @@ void setup() {
   Serial.println(topic);
   Serial.println();
 
-  // subscribe to a topic
-  mqttClient.subscribe(topic);
 
-  // topics can be unsubscribed using:
-  // mqttClient.unsubscribe(topic);
+  mqttClient.subscribe(topic);
 
   Serial.print("Waiting for messages on topic: ");
   Serial.println(topic);
   Serial.println();
+  
+
+  lcd.backlight();
+
+ 
 }
 
-void loop() {
-  int messageSize = mqttClient.parseMessage();
+/* Main program loop */
+void loop() 
+{
+  lcd.backlight();
+
+int messageSize = mqttClient.parseMessage();
   if (messageSize) {
-    // we received a message, print out the topic and contents
     Serial.print("Received a message with topic '");
     Serial.print(mqttClient.messageTopic());
     Serial.print("', length ");
     Serial.print(messageSize);
     Serial.println(" bytes:");
-
-    // use the Stream interface to print the contents
+    int fila = 0;
+    int columna = 0;
+    lcd.clear();
     while (mqttClient.available()) {
-      Serial.print((char)mqttClient.read());
+      if(columna == 20){
+        columna = 0;
+        fila = fila +1;
+      }
+      if(fila == 4){
+        fila = 0;
+        lcd.clear();
+      }
+      lcd.setCursor(columna, fila);
+      char caracter = (char)mqttClient.read();
+      lcd.print(caracter);
+      Serial.print(caracter);
+      columna = columna +1;
+      delay(100);
     }
-    Serial.println();
-
-    Serial.println();
+    Serial.println();   
   }
 }
